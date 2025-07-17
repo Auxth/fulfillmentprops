@@ -1,0 +1,16 @@
+name: Call simulate-rates Supabase Function
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  call-supabase-function:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call Supabase Edge Function via curl
+        run: |
+          curl -X POST "${{ secrets.SUPABASE_FUNCTION_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_KEY }}"
