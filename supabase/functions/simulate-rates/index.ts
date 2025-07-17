@@ -1,49 +1,72 @@
-import { serve } from "https://deno.land/std@0.192.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.131.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-serve(async (_req) => {
+serve(async (req) => {
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    Deno.env.get("SUPABASE_ANON_KEY")!
   );
 
-  const { data: games, error } = await supabase.from("games").select("id, name, rtp, simulated");
-  if (error || !games) return new Response("error loading games", { status: 500 });
+  const { data: games, error } = await supabase.from("games").select("*");
 
-  const updatedGames = await Promise.all(
-    games.map(async (game) => {
-      const prev_win_rate = game.simulated || game.rtp;
+  if (error) {
+    console.error("Fetch error:", error);
+    return new Response("Failed to fetch games", { status: 500 });
+  }
 
-      // --- Simulate changes ---
-      const win_rate = clamp(prev_win_rate + randFloat(-1.5, 1.5), 50, 98);
-      const bonus_rate = clamp(randFloat(5, 25), 0, 30); // as %
-      const free_spin_rate = clamp(randFloat(3, 20), 0, 25); // as %
-      const user_count = Math.floor(randFloat(50, 500));
-      const total_payout = +(user_count * randFloat(0.8, 1.5) * 1).toFixed(2);
+  for (const game of games) {
+    const prevWinRate = game.simulated ?? 50;
+    const simulated = simulateFromRTP(game.rtp, game.volatility);
+    const bonus_rate = simulateBonus(game.rtp, game.volatility);
+    const free_spin_rate = simulateFreeSpin(game.volatility);
+    const user_count = simulateUserCount(game.volatility);
+    const total_payout = Math.max(
+  50000,
+  Math.floor(user_count * game.rtp * Math.random())
+);
 
-      const { error: updateErr } = await supabase.from("games").update({
-        prev_win_rate,
-        simulated: win_rate,
+    const { error: updateError } = await supabase
+      .from("games")
+      .update({
+        prev_win_rate: prevWinRate,
+        simulated,
         bonus_rate,
         free_spin_rate,
         user_count,
-        total_payout,
-        updated_at: new Date().toISOString(),
-      }).eq("id", game.id);
+        total_payout
+      })
+      .eq("id", game.id);
 
-      return updateErr ? { id: game.id, status: "fail" } : { id: game.id, status: "ok" };
-    })
-  );
+    if (updateError) {
+      console.error(`Error updating game ${game.id}:`, updateError);
+    }
+  }
 
-  return new Response(JSON.stringify({ status: "ok", updated: updatedGames.length }), {
+  return new Response(JSON.stringify({ status: "ok" }), {
     headers: { "Content-Type": "application/json" },
   });
 });
 
-function randFloat(min: number, max: number) {
-  return Math.random() * (max - min) + min;
+function simulateFromRTP(rtp, volatility) {
+  const volFactor = volatility === "high" ? 1.5 : volatility === "low" ? 0.8 : 1.0;
+  const base = rtp + Math.random() * 4 - 2;
+  const simulated = base * volFactor;
+  return parseFloat(Math.min(98.5, simulated).toFixed(2));
 }
 
-function clamp(val: number, min: number, max: number) {
-  return Math.min(Math.max(val, min), max);
+function simulateBonus(rtp: number, volatility: string): number {
+  const base = volatility === "high" ? 15 : volatility === "low" ? 30 : 22;
+  const noise = Math.random() * 10 - 5;
+  return Math.max(60, parseFloat((base + noise).toFixed(2)));
+}
+
+function simulateFreeSpin(volatility: string): number {
+  const base = volatility === "high" ? 20 : volatility === "low" ? 10 : 15;
+  const noise = Math.random() * 5 - 2.5;
+  return Math.max(60, parseFloat((base + noise).toFixed(2)));
+}
+
+function simulateUserCount(volatility: string): number {
+  const base = volatility === "high" ? 500 : volatility === "low" ? 1500 : 1000;
+  return Math.max(100, Math.floor(base + Math.random() * 400 - 200));
 }
