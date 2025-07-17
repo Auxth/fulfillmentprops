@@ -1,66 +1,49 @@
-// /functions/simulate-rates/index.ts
-
 import { serve } from "https://deno.land/std@0.192.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-serve(async () => {
+serve(async (_req) => {
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  const { data: games, error } = await supabase.from("games").select("*");
+  const { data: games, error } = await supabase.from("games").select("id, name, rtp, simulated");
+  if (error || !games) return new Response("error loading games", { status: 500 });
 
-  if (error || !games) {
-    return new Response(JSON.stringify({
-      error,
-    }), {
-      status: 500,
-    });
-  }
+  const updatedGames = await Promise.all(
+    games.map(async (game) => {
+      const prev_win_rate = game.simulated || game.rtp;
 
-  const updates = games.map((g) => {
-    const id = g.id;
-    const name = g.name ?? "Untitled";
-    const rtp = g.rtp ?? 96;
-    const volatilityRaw = g.volatility ?? "medium";
+      // --- Simulate changes ---
+      const win_rate = clamp(prev_win_rate + randFloat(-1.5, 1.5), 50, 98);
+      const bonus_rate = clamp(randFloat(5, 25), 0, 30); // as %
+      const free_spin_rate = clamp(randFloat(3, 20), 0, 25); // as %
+      const user_count = Math.floor(randFloat(50, 500));
+      const total_payout = +(user_count * randFloat(0.8, 1.5) * 1).toFixed(2);
 
-    const volatility = volatilityRaw === "high"
-      ? 2
-      : volatilityRaw === "low"
-      ? 0.2
-      : 1;
+      const { error: updateErr } = await supabase.from("games").update({
+        prev_win_rate,
+        simulated: win_rate,
+        bonus_rate,
+        free_spin_rate,
+        user_count,
+        total_payout,
+        updated_at: new Date().toISOString(),
+      }).eq("id", game.id);
 
-    const drift = (Math.random() - 0.5) * volatility * 2;
+      return updateErr ? { id: game.id, status: "fail" } : { id: game.id, status: "ok" };
+    })
+  );
 
-    const base = g.simulated ?? rtp;
-    const simulated = Math.min(99.5, Math.max(base - 15, base + drift));
-
-    return {
-      id,
-      name,
-      rtp,
-      volatility: volatilityRaw,
-      simulated: parseFloat(simulated.toFixed(2)),
-    };
-  });
-
-  const { error: updateError } = await supabase
-    .from("games")
-    .upsert(updates, { onConflict: "id" });
-
-  if (updateError) {
-    return new Response(JSON.stringify({
-      error: updateError,
-    }), {
-      status: 500,
-    });
-  }
-
-  return new Response(JSON.stringify({
-    status: "ok",
-    updated: updates.length,
-  }), {
-    status: 200,
+  return new Response(JSON.stringify({ status: "ok", updated: updatedGames.length }), {
+    headers: { "Content-Type": "application/json" },
   });
 });
+
+function randFloat(min: number, max: number) {
+  return Math.random() * (max - min) + min;
+}
+
+function clamp(val: number, min: number, max: number) {
+  return Math.min(Math.max(val, min), max);
+}
