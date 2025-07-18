@@ -5,14 +5,14 @@ import { FaUserFriends } from "react-icons/fa";
 import { Card, CardContent } from "@/components/ui/card";
 
 const getColor = (rate: number) => {
-  if (rate < 52.5) return "bg-red-500 text-red-600";
-  if (rate < 56.8) return "bg-orange-600 text-orange-700";
-  if (rate < 61.3) return "bg-orange-400 text-orange-500";
-  if (rate < 65.8) return "bg-amber-400 text-amber-500";
-  if (rate < 70.3) return "bg-yellow-400 text-yellow-600";
-  if (rate < 74.8) return "bg-lime-400 text-lime-600";
-  if (rate < 79.3) return "bg-green-400 text-green-600";
-  if (rate < 83.8) return "bg-emerald-500 text-emerald-600";
+  if (rate < 25) return "bg-red-500 text-red-600";
+  if (rate < 35) return "bg-orange-600 text-orange-700";
+  if (rate < 45) return "bg-orange-400 text-orange-500";
+  if (rate < 55) return "bg-amber-400 text-amber-500";
+  if (rate < 65) return "bg-yellow-400 text-yellow-600";
+  if (rate < 75) return "bg-lime-400 text-lime-600";
+  if (rate < 85) return "bg-green-400 text-green-600";
+  if (rate < 95) return "bg-emerald-500 text-emerald-600";
   return "bg-green-500 text-green-600";
 };
 
