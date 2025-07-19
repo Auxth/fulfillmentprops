@@ -16,15 +16,26 @@ const getColor = (rate: number) => {
   return "bg-green-500 text-green-600";
 };
 
-export default function GameCard({ game }: { game: any }) {
+export default function TopGameCard({
+  game,
+  index,
+}: {
+  game: any;
+  index: number;
+}) {
   const winRate = game.simulated ?? 0;
   const winRateChange = winRate - (game.prev_win_rate ?? 0);
   const isIncrease = winRateChange >= 0;
   const [barColor, textColor] = getColor(winRate).split(" ");
 
   return (
-    <Card className="bg-[#181818] text-white rounded-xl border border-[#2a2a2a] hover:border-[#00FFC2] shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]">
-      <CardContent className="relative p-4">
+    <Card className="relative bg-[#181818] text-white rounded-xl border border-[#FFD700] hover:border-[#00FFC2] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.03]">
+      <CardContent className="p-4">
+        {/* Badge TOP */}
+        <div className="absolute top-2 right-2 bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-full shadow">
+          🏆 TOP {index + 1}
+        </div>
+
         {/* รูป */}
         <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-2">
           <Image

@@ -1,9 +1,16 @@
+// app/games/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import dayjs from "dayjs";
+import TopGameCard from "@/components/TopGameCard";
 import GameCard from "@/components/GameCard";
+import DashboardStatCard from "@/components/DashboardStatCard";
+import { FiActivity, FiUsers } from "react-icons/fi";
+import { TbCoinFilled } from "react-icons/tb";
+import { GiWorld, GiTrophy } from "react-icons/gi";
+import { SiApostrophe } from "react-icons/si";
 
 export default function GamesPage() {
   const [games, setGames] = useState<any[]>([]);
@@ -25,19 +32,81 @@ export default function GamesPage() {
     fetchData();
   }, []);
 
+  const top10Games = games.slice(0, 10);
+  const allOtherGames = games.slice(10);
+  const totalUsers = games.reduce((acc, g) => acc + (g.user_count ?? 0), 0);
+  const avgReward =
+    games.reduce((acc, g) => acc + (g.total_payout ?? 0), 0) /
+    (games.length || 1);
+
   return (
-    <div className="p-6 max-w-8xl mx-auto">
-      <div className="flex flex-col items-center mb-6">
-        <h1 className="text-2xl font-bold mb-4">Real-time Ranking Games</h1>
-        <h1 className="text-white text-md mb-2">
-          Updated time : {now.format("HH:mm:ss")}
-        </h1>
+    <div className="p-12 max-w mx-auto text-white bg-[#121212] min-h-screen">
+      {/* Header */}
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h1 className="text-4xl font-bold text-white flex items-center gap-2">
+            <GiWorld />
+            Game Winrate Dashboard
+          </h1>
+          <p className="text-gray-400 text-sm mt-1">
+            Real‑time stats for online game performance
+          </p>
+        </div>
+        <div className="text-sm text-right text-gray-400">
+          <p>Last updated:</p>
+          <p className="text-white">{now.format("MMM DD, HH:mm:ss")}</p>
+        </div>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 xl:grid-cols-8 gap-6">
-        {games.map((game, index) => (
-          <GameCard key={game.id} game={game} index={index} />
-        ))}
+
+      {/* Dashboard Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <DashboardStatCard
+          title="Total Games"
+          value={games.length}
+          icon={<FiActivity size={24} className="text-[#00FFC2]" />}
+        />
+        <DashboardStatCard
+          title="Total Users"
+          value={totalUsers}
+          icon={<FiUsers size={24} className="text-[#00FFC2]" />}
+        />
+        <DashboardStatCard
+          title="Average Reward"
+          value={`${avgReward.toLocaleString()} `}
+          icon={<TbCoinFilled size={24} className="text-[#00FFC2]" />}
+        />
       </div>
+
+      {/* Top 10 Section */}
+      <section className="mb-10 mx-auto">
+        <h2 className="text-2xl font-semibold mb-4 ">
+          <div className="flex ">
+            <GiTrophy className="text-[#00FFC2]" size={36} />
+            <span className="pl-2">Top 10 Games</span>
+          </div>
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          {top10Games.map((game, index) => (
+            <TopGameCard key={game.id} game={game} index={index} />
+          ))}
+        </div>
+      </section>
+
+      {/* All Games Section */}
+      <section>
+        <h2 className="text-2xl font-semibold mb-4 text-white">
+          <div className="flex ">
+            <SiApostrophe className="text-[#00FFC2]" size={36} />
+            <span className="pl-4">All Games</span>
+          </div>
+        </h2>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          {allOtherGames.map((game) => (
+            <GameCard key={game.id} game={game} />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
