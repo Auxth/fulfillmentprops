@@ -1,9 +1,10 @@
-// app/games/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+
 import TopGameCard from "@/components/TopGameCard";
 import GameCard from "@/components/GameCard";
 import DashboardStatCard from "@/components/DashboardStatCard";
@@ -12,14 +13,14 @@ import { TbCoinFilled } from "react-icons/tb";
 import { GiWorld, GiTrophy } from "react-icons/gi";
 import { SiApostrophe } from "react-icons/si";
 
+dayjs.extend(relativeTime);
+
 export default function GamesPage() {
   const [games, setGames] = useState<any[]>([]);
-  const [now, setNow] = useState(dayjs());
-
-  useEffect(() => {
-    const timer = setInterval(() => setNow(dayjs()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+  const [lastSimulatedAt, setLastSimulatedAt] = useState<string | null>(null);
+  const [lastSimulatedRelative, setLastSimulatedRelative] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,7 +28,26 @@ export default function GamesPage() {
         .from("games")
         .select("*")
         .order("simulated", { ascending: false });
-      if (data) setGames(data);
+      if (data) {
+        setGames(data);
+        const latest = data.reduce((latest, g) => {
+          const time = new Date(g.last_simulated_at).getTime();
+          return time > latest ? time : latest;
+        }, 0);
+
+        const latestDate = new Date(latest);
+        latestDate.setHours(latestDate.getHours() + 7); // Force to UTC+7
+
+        setLastSimulatedAt(
+          latestDate.toLocaleString("en-GB", {
+            month: "short",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        );
+        setLastSimulatedRelative(dayjs(latestDate).fromNow());
+      }
     };
     fetchData();
   }, []);
@@ -53,8 +73,13 @@ export default function GamesPage() {
           </p>
         </div>
         <div className="text-sm text-right text-gray-400">
-          <p>Last updated:</p>
-          <p className="text-white">{now.format("MMM DD, HH:mm:ss")}</p>
+          <p className="mb-1">Last Updated:</p>
+          <p className="text-white text-[16px] font-semibold mb-1">
+            {lastSimulatedAt ?? "Loading..."}
+          </p>
+          <p className="text-gray-500 text-xs mb-1">
+            ({lastSimulatedRelative})
+          </p>
         </div>
       </div>
 
