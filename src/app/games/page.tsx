@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-
+import type { Game } from "@/types/Game";
 import TopGameCard from "@/components/TopGameCard";
 import GameCard from "@/components/GameCard";
 import DashboardStatCard from "@/components/DashboardStatCard";
@@ -16,7 +16,7 @@ import { SiApostrophe } from "react-icons/si";
 dayjs.extend(relativeTime);
 
 export default function GamesPage() {
-  const [games, setGames] = useState<any[]>([]);
+  const [games, setGames] = useState<Game[]>([]);
   const [lastSimulatedAt, setLastSimulatedAt] = useState<string | null>(null);
   const [lastSimulatedRelative, setLastSimulatedRelative] = useState<
     string | null
@@ -29,7 +29,7 @@ export default function GamesPage() {
         .select("*")
         .order("simulated", { ascending: false });
       if (data) {
-        setGames(data);
+        setGames(data as Game[]);
         const latest = data.reduce((latest, g) => {
           const time = new Date(g.last_simulated_at).getTime();
           return time > latest ? time : latest;

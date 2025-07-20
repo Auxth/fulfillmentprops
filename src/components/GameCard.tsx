@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { FaUserFriends } from "react-icons/fa";
 import { Card, CardContent } from "@/components/ui/card";
+import { Game } from "@/types/Game";
 
 const getColor = (rate: number) => {
   if (rate < 25) return "bg-red-500 text-red-600";
@@ -16,7 +17,11 @@ const getColor = (rate: number) => {
   return "bg-green-500 text-green-600";
 };
 
-export default function GameCard({ game }: { game: any }) {
+type Props = {
+  game: Game;
+};
+
+export default function GameCard({ game }: Props) {
   const winRate = game.simulated ?? 0;
   const winRateChange = winRate - (game.prev_win_rate ?? 0);
   const isIncrease = winRateChange >= 0;
