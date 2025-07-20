@@ -14,5 +14,5 @@ export type Game = {
   avg_bet?: number;
   total_payout?: number;
   last_simulated_at?: string;
-  image?: string; 
+  image: string; 
 };
