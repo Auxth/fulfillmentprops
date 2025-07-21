@@ -11,7 +11,7 @@ export default function DashboardStatCard({
 }) {
   return (
     <Card className="bg-[#1f1f1f] border border-gray-700 rounded-xl hover:border-[#00FFC2] shadow-sm hover:shadow-lg transition-all duration-300">
-      <CardContent className="p-5">
+      <CardContent className="p-5 flex flex-col items-center justify-between">
         <div className="flex items-center justify-between mb-1">
           <span className="text-sm text-gray-400 flex items-center gap-2">
             {icon} {title}

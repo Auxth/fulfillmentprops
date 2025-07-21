@@ -54,10 +54,13 @@ export default function GamesPage() {
 
   const top10Games = games.slice(0, 10);
   const allOtherGames = games.slice(10);
-  const totalUsers = games.reduce((acc, g) => acc + (g.user_count ?? 0), 0);
-  const avgReward =
-    games.reduce((acc, g) => acc + (g.total_payout ?? 0), 0) /
-    (games.length || 1);
+
+  const totalUsers = games.reduce((acc, g, i) => {
+    const isTop10 = i < 10;
+    return acc + (g.user_count ?? 0) + (isTop10 ? 1000 : 0);
+  }, 0);
+
+  const totalReward = games.reduce((acc, g) => acc + (g.total_payout ?? 0), 0);
 
   return (
     <div className="p-12 max-w mx-auto text-white bg-[#121212] min-h-screen">
@@ -96,8 +99,8 @@ export default function GamesPage() {
           icon={<FiUsers size={24} className="text-[#00FFC2]" />}
         />
         <DashboardStatCard
-          title="Average Reward"
-          value={`${avgReward.toLocaleString()} `}
+          title="Total Reward"
+          value={totalReward.toLocaleString()}
           icon={<TbCoinFilled size={24} className="text-[#00FFC2]" />}
         />
       </div>
