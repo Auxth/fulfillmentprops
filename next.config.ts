@@ -1,8 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ["example.com", "vfxquwgmypdrgtdajuzy.supabase.co"], // 👈 เพิ่ม host ที่ใช้จริง
+    unoptimized: true,              // <<< ปิด Optimizer ของ Vercel ชั่วคราว
+    domains: [
+      "vfxquwgmyPDRGtdajuzy.supabase.co", // โดเมน Supabase ของคุณ
+    ],
   },
 };
-
 export default nextConfig;

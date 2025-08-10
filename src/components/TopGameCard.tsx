@@ -44,6 +44,10 @@ export default function TopGameCard({
             alt={game.name}
             fill
             className="object-cover"
+            unoptimized
+            sizes="(max-width: 640px) 50vw, 220px"
+            loading="lazy"
+            // priority={index < 3}   // จะพรีโหลดเฉพาะ TOP 3 ก็ได้ (ถ้าต้องการให้ขึ้นไว)
           />
         </div>
 

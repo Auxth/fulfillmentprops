@@ -37,6 +37,9 @@ export default function GameCard({ game }: Props) {
             alt={game.name}
             fill
             className="object-cover"
+            unoptimized // <<< สำคัญ
+            sizes="(max-width: 640px) 50vw, 220px" // บอกเบราว์เซอร์ว่ารูปใบนี้กว้างราว ๆ เท่านี้
+            loading="lazy"
           />
         </div>
 
